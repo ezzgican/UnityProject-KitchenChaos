@@ -6,6 +6,8 @@ public class ClearCounter : BaseCounter
 {
     [SerializeField] private KitchenObjectSO kitchenObjectSO;
     
+    
+    
     public override void Interact(Player player) {
 
         if (!HasKitchenObject())
@@ -20,6 +22,24 @@ public class ClearCounter : BaseCounter
             // there is a kitchen object here
             if (player.HasKitchenObject())
             {
+                if (player.GetKitchenObject().TryGetPlate(out PlateKitchenObject plateKitchenObject))
+                {
+
+                    if (plateKitchenObject.TryAddIngridient(GetKitchenObject().GetKitchenObjectSO()))
+                    {
+                        GetKitchenObject().DestroySelf();
+                    }
+                }
+                else {
+                    if (GetKitchenObject().TryGetPlate(out plateKitchenObject)) {
+                        if (plateKitchenObject.TryAddIngridient(player.GetKitchenObject().GetKitchenObjectSO())) {
+                            player.GetKitchenObject().DestroySelf();
+                        }
+                        
+                    }
+                
+                }
+
                 
             }
             else {
