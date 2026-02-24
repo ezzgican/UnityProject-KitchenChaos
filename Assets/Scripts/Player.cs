@@ -10,6 +10,8 @@ public class Player : MonoBehaviour, IKitchenObjectParent
 {
     public static Player Instance { get; private set; }
 
+    public event EventHandler OnPickedSomething;
+
     public event EventHandler<onSelectedCounterChangedEventArgs> onSelectedCounterChanged;
     public class onSelectedCounterChangedEventArgs : EventArgs {
 
@@ -42,6 +44,8 @@ public class Player : MonoBehaviour, IKitchenObjectParent
 
     private void GameInput_onInteractAlternateAction(object sender, EventArgs e)
     {
+        if (!KitchenGameManager.Instance.IsGamePlaying()) return;
+
         if (selectedCounter != null)
         {
             selectedCounter.InteractAlternate(this);
@@ -50,6 +54,8 @@ public class Player : MonoBehaviour, IKitchenObjectParent
 
     private void GameInput_onInteractAction(object sender, System.EventArgs e)
     {
+        if (!KitchenGameManager.Instance.IsGamePlaying()) return;
+
         if (selectedCounter != null) {
             selectedCounter.Interact(this);
         }
@@ -110,8 +116,15 @@ public class Player : MonoBehaviour, IKitchenObjectParent
         float moveDistance = moveSpeed * Time.deltaTime;
         float playerRadius = .7f;
         float playerHeight = 2f;
-        float playerSize = .7f;
-        bool canMove = !Physics.Raycast(transform.position, moveDir, playerSize);
+        
+        bool canMove = !Physics.CapsuleCast(
+    transform.position,
+    transform.position + Vector3.up * playerHeight,
+    playerRadius,
+    moveDir,
+    moveDistance
+);
+
 
 
 
@@ -152,7 +165,11 @@ public class Player : MonoBehaviour, IKitchenObjectParent
         isWalking = moveDir != Vector3.zero;
 
         float rotateSpeed = 10f;
-        transform.forward = Vector3.Slerp(transform.forward, moveDir, Time.deltaTime * rotateSpeed);
+        if (moveDir != Vector3.zero)
+        {
+            transform.forward = Vector3.Slerp(transform.forward, moveDir, Time.deltaTime * rotateSpeed);
+        }
+
 
     }
 
@@ -173,6 +190,10 @@ public class Player : MonoBehaviour, IKitchenObjectParent
     public void SetKitchenObject(KitchenObject kitchenObject)
     {
         this.kitchenObject = kitchenObject;
+
+        if (kitchenObject != null) {
+            OnPickedSomething?.Invoke(this, EventArgs.Empty);
+        }
     }
 
     public KitchenObject GetKitchenObject()
